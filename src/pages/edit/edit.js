@@ -151,6 +151,7 @@ const Edit = ({inputs, title, entityType }) => {
                       onChange={handleInput}
                       required
                       value={data[input.id] || ''}
+                      disabled={input.id === "role"}
                     >
                       {input.options.map((option) => (
                         <option key={option} value={option}>{option}</option>
@@ -166,6 +167,8 @@ const Edit = ({inputs, title, entityType }) => {
                       onChange={handleInput}
                       required
                       value={data[input.id] || ''}
+                      // Add disabled attribute for email and password fields
+                      disabled={input.id === "password" || input.id === "idNum"}
                     />
                   )}
                 </div>

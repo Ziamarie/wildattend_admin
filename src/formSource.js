@@ -1,3 +1,48 @@
+import { db } from "../src/firebase"; // Import the Firebase database instance
+import { collection, query, where, getDocs } from "firebase/firestore"; // Import Firestore functions
+
+// Function to fetch users with role "Faculty"
+const fetchFacultyUsers = async () => {
+  try {
+    const usersRef = collection(db, 'users');
+    const querySnapshot = await getDocs(query(usersRef, where('role', '==', 'Faculty')));
+    const facultyUsers = [];
+    querySnapshot.forEach((doc) => {
+      facultyUsers.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    return facultyUsers;
+  } catch (error) {
+    console.error('Error fetching faculty users: ', error);
+    return []; // Return an empty array in case of error
+  }
+};
+
+
+// Fetch faculty users and update classInputs options
+export const updateClassInputsOptions = async (callback) => {
+  try {
+    const facultyUsers = await fetchFacultyUsers();
+    const instructorInput = classInputs.find(input => input.id === 'instructor');
+    if (instructorInput) {
+      instructorInput.options = facultyUsers.map(user => ({ id: user.id, name: `${user.firstName} ${user.lastName}` }));
+    }
+    callback(); // Call the callback function to indicate that options are updated
+  } catch (error) {
+    console.error('Error updating classInputs options: ', error);
+  }
+};
+
+// Define a callback function to be passed to updateClassInputsOptions
+const handleUpdateOptions = () => {
+  console.log('Class inputs options updated successfully!');
+};
+
+// Call updateClassInputsOptions with the callback function
+updateClassInputsOptions(handleUpdateOptions);
+
 export const userInputs = [
   {
     id: "idNum",
@@ -63,12 +108,12 @@ export const classInputs= [
     type:"text",
     placeholder: "eg. F0/G0",
   },
-  // {
-  //   id: "instructor",
-  //   label:"Instructor",
-  //   type:"text",
-  //   placeholder: "eg. Firstname Lastname",
-  // },
+  {
+    id: "instructor",
+    label:"Instructor",
+    type:"dropdown", // Change the type to "dropdown"
+    options: [], // Initialize options as empty array
+  },
   {
     id: "classRoom",
     label:"Classroom",

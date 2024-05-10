@@ -110,7 +110,7 @@ function App() {
                 <RequireAuth>
                   <Single entitySingle={classSingle} entity="classes"
                     // INSIDE CLASSES, THEIR DATA TABLE SHOWS THEIR LIST OF USERS INVOLVED
-                    entityTable="users" entityAssign="classes" tableTitle="List of Students Enrolled" entityColumns={userColumns} 
+                    entityTable="users" entityAssign="classes" tableTitle="List of Users Involved" entityColumns={userColumns} 
                   />
                 </RequireAuth>
                 }

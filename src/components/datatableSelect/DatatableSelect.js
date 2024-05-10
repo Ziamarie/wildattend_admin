@@ -13,21 +13,51 @@ const DatatableSelect = ({ entity, tableTitle, entityColumns, id, entityAssign }
   useEffect(() => {
     //LISTEN (REALTIME)
     console.log(entity); // Inspect the value of entity
-    const unsub = onSnapshot(collection(db, entity), (snapShot) => {
-      let list = [];
-      snapShot.docs.forEach((doc) => {
-        list.push({ id: doc.id, ...doc.data() });
-      });
-      setData(list);
-    }, (error) => {
-      console.log(error);
-    });
-    return () => {
-      unsub();
+  
+    const fetchData = async () => {
+      try {
+        // Extract the entity ID from the URL
+        const parts = location.pathname.split("/");
+        const entityId = parts[parts.length - 2]; // Get the second last part of the URL
+  
+        // Query the "userClasses" collection to get all the documents
+        const userClassesSnapshot = await getDocs(collection(db, "userClasses"));
+  
+        // Extract the IDs of classes/users already associated with the specific user/class
+        const associatedIDs = userClassesSnapshot.docs
+          .filter(doc => {
+            return location.pathname.startsWith("/users/") ?
+              doc.data().userID === entityId :
+              doc.data().classID === entityId;
+          })
+          .map(doc => {
+            return location.pathname.startsWith("/users/") ?
+              doc.data().classID :
+              doc.data().userID;
+          });
+  
+        // Query the entity collection (classes/users) to get all the documents
+        const entitySnapshot = await getDocs(collection(db, entity));
+  
+        // Filter the data to exclude the classes/users that are already associated
+        let filteredData = entitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+        // Check the URL path and filter out users with role "Faculty" if necessary
+        if (location.pathname.startsWith("/classes/") && entity === "users") {
+          filteredData = filteredData.filter(user => user.role !== "Faculty");
+        }
+  
+        setData(filteredData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
-  }, []);
-
-  const handleAdd = async () => {
+  
+    fetchData();
+  }, [entity, location.pathname]);
+  
+  
+  const handleAdd = async (params) => {
     try {
       if (selectedRowIds.length === 0) {
         console.log("Please select a row");

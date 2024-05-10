@@ -9,11 +9,14 @@ import { auth, db, storage } from "../../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
+import { updateClassInputsOptions } from "../../formSource";
+
 
 const New = ({ inputs, title, entityType }) => {
   const [file, setFile] = useState("");
   const [data, setData] = useState({});
   const [perc, setPerc] = useState(null);
+  const [optionsUpdated, setOptionsUpdated] = useState(false); // State to track if options are updated
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,11 +57,26 @@ const New = ({ inputs, title, entityType }) => {
     file && uploadFile();
   }, [file]);
 
+  useEffect(() => {
+    updateClassInputsOptions(() => {
+      setOptionsUpdated(true); // Set optionsUpdated state to true after options are updated
+    }); // Call the function to fetch faculty users and update options
+  }, []); // Empty dependency array to ensure it's only called once when the component mounts
+
+
   const handleInput = (e) => {
     const id = e.target.id;
     const value = e.target.value;
-    setData({ ...data, [id]: value });
+  
+    // For the 'instructor' field, capture the selected instructor's document ID
+    if (id === 'instructor') {
+      const instructorId = e.target.options[e.target.selectedIndex].value;
+      setData({ ...data, [id]: instructorId }); // Store the selected instructor's document ID
+    } else {
+      setData({ ...data, [id]: value });
+    }
   };
+  
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -92,7 +110,7 @@ const New = ({ inputs, title, entityType }) => {
       } else {
         await addDoc(collection(db, collectionName), {
           ...data,
-          instructor: null, // Initialize instructor reference as null
+          instructor: db.doc(`users/${data.instructor}`), // Reference the instructor's document
           // studentsEnrolled: [], // Initialize studentsEnrolled array for the class
           // attendanceRecords: [], // Initialize attendanceRecords array for the class
         });
@@ -143,47 +161,52 @@ const New = ({ inputs, title, entityType }) => {
                 />
               </div>
 
-              {inputs.map((input) => (
-                <div className="formInput" key={input.id}>
-                  <label className="labeln" htmlFor={input.id}>
-                    {input.label}
-                  </label>
-                  {input.type === "dropdown" ? (
-                    // Check if input type is dropdown
-                    <select
-                      className="inputn"
-                      id={input.id}
-                      onChange={handleInput}
-                      required
-                    >
-                      {input.options.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    // Render input field for other types
-                    <input
-                      className="inputn"
-                      id={input.id}
-                      type={input.type}
-                      placeholder={input.placeholder}
-                      pattern={input.pattern}
-                      onChange={handleInput}
-                      required
-                    />
-                  )}
-                </div>
-              ))}
-
-              <button
-                disabled={perc !== null && perc < 100}
-                className="buttonn"
-                type="submit"
-              >
-                Submit
-              </button>
+              {optionsUpdated ? ( // Render form inputs and dropdowns only when options are updated
+                <>
+                  {inputs.map((input) => (
+                    <div className="formInput" key={input.id}>
+                      <label className="labeln" htmlFor={input.id}>
+                        {input.label}
+                      </label>
+                      {input.type === "dropdown" ? (
+                        // Check if input type is dropdown
+                        <select
+                          className="inputn"
+                          id={input.id}
+                          onChange={handleInput}
+                          required
+                        >
+                          {input.options.map((option) => (
+                            <option key={option} value={option}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        // Render input field for other types
+                        <input
+                          className="inputn"
+                          id={input.id}
+                          type={input.type}
+                          placeholder={input.placeholder}
+                          pattern={input.pattern}
+                          onChange={handleInput}
+                          required
+                        />
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    disabled={perc !== null && perc < 100}
+                    className="buttonn"
+                    type="submit"
+                  >
+                    Submit
+                  </button>
+                </>
+              ) : (
+                <p>Loading...</p> // Show loading message while options are being updated
+              )}
             </form>
           </div>
         </div>
