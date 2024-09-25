@@ -7,7 +7,7 @@
 }
 
 .profileContainer{
-  background: linear-gradient(to bottom, #FFFFFF, #CEA108);
+  background: linear-gradient(to bottom, #FFFFFF,  #F8C400);
   flex: 6;
 }
 
@@ -19,8 +19,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 40px; 
   margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
 
 .profilePic {
   width: 100%;
